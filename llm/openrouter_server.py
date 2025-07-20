@@ -28,7 +28,7 @@ app = FastAPI()
 if not API_KEY:
     logger.warning("OPENROUTER_API_KEY is not set.")
 
-logger.info(f"Using OpenAI base URL: {API_BASE}")
+logger.info(f"Using OpenRouter base URL: {API_BASE}")
 
 with open("config.json", encoding="utf-8") as f:
     config = json.load(f)
@@ -79,9 +79,10 @@ def _stream_from_openrouter(messages, model):
         with requests.post(url, headers=headers, json=payload, stream=True, verify=False) as r:
             if r.status_code != 200:
                 body = r.text
-                logger.error(f"OpenAI API returned {r.status_code}: {body}")
-                raise HTTPException(status_code=500, detail="OpenAI API error")
-            for chunk in r.iter_content(chunk_size=1024, decode_unicode=True):
+                logger.error(f"OpenRouter API returned {r.status_code}: {body}")
+                raise HTTPException(status_code=500, detail="OpenRouter API error")
+            for chunk in r.iter_content(chunk_size=1024):
+                chunk = chunk.decode('utf-8', errors='replace')  # Декодируем с заменой некорректных символов
                 buffer += chunk
                 while True:
                     line_end = buffer.find('\n')
@@ -102,7 +103,7 @@ def _stream_from_openrouter(messages, model):
                             yield content
                     except json.JSONDecodeError:
                         continue
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(event_generator(), media_type="text/event-stream; charset=utf-8")
 
 @app.post("/answer/stream", response_class=StreamingResponse)
 def answer_stream(request: Request, dto: AnswerRequestDto):
@@ -151,4 +152,4 @@ def get_answer_stream_by_screenshot_with_image(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("openai_server:app", host="0.0.0.0", port=8000, reload=True, log_config=None)
+    uvicorn.run("openrouter_server:app", host="0.0.0.0", port=8000, reload=True, log_config=None)
