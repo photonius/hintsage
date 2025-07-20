@@ -61,7 +61,7 @@ class AnswerRequestDto(BaseModel):
 
     chatHistory: List[ChatHistoryItem] = []
 
-def _stream_from_openai(messages, model):
+def _stream_from_openrouter(messages, model):
     url = f"{API_BASE}/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {API_KEY}",
@@ -116,7 +116,7 @@ def answer_stream(request: Request, dto: AnswerRequestDto):
 
     model = config.get("ANSWER_MODEL")
 
-    return _stream_from_openai(messages, model)
+    return _stream_from_openrouter(messages, model)
 
 @app.post("/answer/shot/stream", response_class=StreamingResponse)
 def get_answer_stream_by_screenshot_with_image(
@@ -147,7 +147,7 @@ def get_answer_stream_by_screenshot_with_image(
     else:
         model = config.get("SHOT_MODEL")
 
-    return _stream_from_openai(messages, model)
+    return _stream_from_openrouter(messages, model)
 
 if __name__ == "__main__":
     import uvicorn
